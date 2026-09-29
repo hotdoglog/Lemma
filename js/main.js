@@ -1,4 +1,4 @@
-// Lemma Club — page behaviour. Content lives in js/content.js.
+// LeMMA — page behaviour. Content lives in js/content.js.
 (function () {
   "use strict";
 
@@ -11,7 +11,7 @@
   const esc = (value) =>
     String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-  const TYPE_LABEL = { meeting: "Meeting", talk: "Talk", competition: "Competition", social: "Social" };
+  const TYPE_LABEL = { meeting: "Meeting", talk: "Talk", social: "Social" };
 
   const ICONS = {
     website:
@@ -57,10 +57,93 @@
     return (a.slice(-2) === b.slice(-2) ? a.slice(0, -3) : a) + "–" + b;
   }
 
-  const events = (data.events || [])
-    .filter((ev) => ev && ev.date)
-    .map((ev) => ({ ...ev, when: parseDate(ev.date) }))
-    .sort((a, b) => a.when - b.when || String(a.start || "").localeCompare(String(b.start || "")));
+  const prepareEvents = (list) =>
+    (list || [])
+      .filter((ev) => ev && ev.date)
+      .map((ev) => ({ ...ev, when: parseDate(ev.date) }))
+      .sort((a, b) => a.when - b.when || String(a.start || "").localeCompare(String(b.start || "")));
+
+  let events = [];
+  let eventsFailed = false;
+
+  // ---------- Google Calendar ----------
+
+  // Reads events from a public Google Calendar. Put #talk, #social or
+  // #meeting anywhere in an event's description to set its type.
+  const gcal = club.googleCalendar || {};
+  const useGoogle = Boolean(gcal.calendarId && gcal.apiKey);
+
+  async function fetchGoogleEvents() {
+    const from = new Date(today.getFullYear() - 1, today.getMonth(), 1);
+    const to = new Date(today.getFullYear() + 1, today.getMonth() + 1, 1);
+    const items = [];
+    let pageToken = "";
+    do {
+      const params = new URLSearchParams({
+        key: gcal.apiKey,
+        singleEvents: "true",
+        orderBy: "startTime",
+        timeMin: from.toISOString(),
+        timeMax: to.toISOString(),
+        maxResults: "2500",
+      });
+      if (pageToken) params.set("pageToken", pageToken);
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(gcal.calendarId)}/events?${params}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Google Calendar returned ${res.status}`);
+      const body = await res.json();
+      items.push(...(body.items || []));
+      pageToken = body.nextPageToken || "";
+    } while (pageToken);
+    return items.filter((item) => item.status !== "cancelled").map(fromGoogle);
+  }
+
+  function fromGoogle(item) {
+    // Timed events come back as "2026-10-14T18:30:00-04:00" in the calendar's
+    // own time zone, so the date and clock time can be read straight off.
+    const start = item.start || {};
+    const end = item.end || {};
+    const timed = Boolean(start.dateTime);
+    let description = htmlToText(item.description || "");
+    let type = "meeting";
+    const tag = description.match(/#(meeting|talk|social)\b/i);
+    if (tag) {
+      type = tag[1].toLowerCase();
+      description = description.replace(tag[0], "").replace(/[ \t]{2,}/g, " ").trim();
+    }
+    return {
+      date: timed ? start.dateTime.slice(0, 10) : start.date,
+      start: timed ? start.dateTime.slice(11, 16) : "",
+      end: timed && end.dateTime ? end.dateTime.slice(11, 16) : "",
+      type,
+      title: item.summary || "Untitled event",
+      description,
+      location: item.location || "",
+    };
+  }
+
+  function htmlToText(html) {
+    // DOMParser never runs scripts or loads images from the markup.
+    const doc = new DOMParser().parseFromString(html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n"), "text/html");
+    return (doc.body.textContent || "").trim();
+  }
+
+  async function loadEvents() {
+    if (!useGoogle) {
+      console.error("No Google Calendar set up: fill in club.googleCalendar in js/content.js.");
+      eventsFailed = true;
+      return;
+    }
+    try {
+      events = prepareEvents(await fetchGoogleEvents());
+    } catch (err) {
+      console.error("Could not load events from Google Calendar:", err);
+      eventsFailed = true;
+    }
+  }
+
+  const emptyMessage = (text) =>
+    `<li class="ev-empty">${eventsFailed ? "Couldn't load the calendar right now. Please try again later." : text}</li>`;
 
   function eventItem(ev) {
     const d = ev.when;
@@ -125,13 +208,14 @@
 
   // ---------- Home: next events ----------
 
-  const nextList = $("#next-events");
-  if (nextList) {
+  function renderNextEvents() {
+    const nextList = $("#next-events");
+    if (!nextList) return;
     const count = Number(nextList.dataset.count) || 3;
     const upcoming = events.filter((ev) => ev.when >= today).slice(0, count);
     nextList.innerHTML = upcoming.length
       ? upcoming.map(eventItem).join("")
-      : '<li class="ev-empty">Nothing on the calendar yet. Check back soon.</li>';
+      : emptyMessage("Nothing on the calendar yet. Check back soon.");
   }
 
   // ---------- Leadership ----------
@@ -153,7 +237,7 @@
       const href = p.links && p.links[key];
       if (!href) return "";
       const external = /^https?:\/\//.test(href) ? ' target="_blank" rel="noopener"' : "";
-      return `<a class="plink" href="${esc(href)}"${external} aria-label="${label}: ${esc(name)}">${ICONS[key]}<span>${label}</span></a>`;
+      return `<a class="plink" href="${esc(href)}"${external} aria-label="${label}: ${esc(name)}" title="${label}">${ICONS[key]}</a>`;
     }).join("");
 
     return `
@@ -165,7 +249,6 @@
         <h3 class="person-name">${esc(name)}</h3>
         <p class="person-role">${esc(p.role)}</p>
         ${p.details ? `<p class="person-details">${esc(p.details)}</p>` : ""}
-        ${p.bio ? `<p class="person-bio">${esc(p.bio)}</p>` : ""}
         ${links ? `<div class="person-links">${links}</div>` : ""}
       </li>`;
   }
@@ -182,8 +265,13 @@
 
   // ---------- Events: calendar ----------
 
-  const calendar = $("#calendar");
-  if (calendar) initCalendar();
+  const needsEvents = $("#calendar") || $("#next-events");
+  if (needsEvents) {
+    loadEvents().then(() => {
+      renderNextEvents();
+      if ($("#calendar")) initCalendar();
+    });
+  }
 
   function initCalendar() {
     const grid = $("#cal-grid");
@@ -240,7 +328,7 @@
       listTitle.textContent = `Events in ${view.toLocaleDateString("en-US", { month: "long" })}`;
       list.innerHTML = monthEvents.length
         ? monthEvents.map(eventItem).join("")
-        : '<li class="ev-empty">Nothing scheduled this month yet.</li>';
+        : emptyMessage("Nothing scheduled this month yet.");
     }
 
     function shift(months) {

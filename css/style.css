@@ -1,4 +1,4 @@
-/* Lemma Club — shared styles
+/* LeMMA — shared styles
    Palette: off-white paper, navy ink, violet accent, light-purple highlighter.
    The site stays light in both light and dark mode.
    Type: EB Garamond for display,
@@ -17,9 +17,8 @@
   --accent: #57068c;
   --accent-ink: #ffffff;
   --mark: rgba(171, 130, 197, 0.5);
-  --t-meeting: #57068c;
+  --t-meeting: #2563b8;
   --t-talk: #7b4bc4;
-  --t-competition: #b86e00;
   --t-social: #13806c;
 
   --font-display: "EB Garamond", "Times New Roman", Times, serif;
@@ -198,6 +197,13 @@ code {
   gap: 12px;
 }
 
+/* Equal-width buttons that line up with the paragraph above. */
+.cta-row .btn {
+  flex: 1 1 0;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 .text-link {
   font-weight: 600;
   text-decoration: none;
@@ -256,6 +262,13 @@ code {
   background: var(--accent);
 }
 
+.wm-logo {
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+}
+
 .wm-name {
   font-family: var(--font-display);
   font-size: 1.55rem;
@@ -273,6 +286,30 @@ code {
   color: var(--muted);
 }
 
+.wm-club {
+  white-space: nowrap;
+}
+
+/* Below this the subtitle and the nav don't fit on one line, so hide it. */
+@media (max-width: 860px) {
+  .wm-club {
+    display: none;
+  }
+}
+
+/* Once the footer is a single column, the subtitle gets its own line. */
+@media (max-width: 600px) {
+  .site-footer .wordmark {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .site-footer .wm-club {
+    display: block;
+    flex-basis: 100%;
+  }
+}
+
 .nav {
   display: flex;
   gap: 4px;
@@ -287,6 +324,7 @@ code {
   font-size: 0.95rem;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .nav a::after {
@@ -381,7 +419,9 @@ code {
   }
 
   .nav a {
-    padding: 12px;
+    align-self: flex-start;
+    margin-block: 4px;
+    padding: 8px 4px;
     font-size: 1.05rem;
   }
 }
@@ -703,33 +743,11 @@ code {
   --type-color: var(--t-talk);
 }
 
-[data-type="competition"] {
-  --type-color: var(--t-competition);
-}
-
 [data-type="social"] {
   --type-color: var(--t-social);
 }
 
 /* ---------- About ---------- */
-
-.definition {
-  max-width: 44ch;
-  padding-block: clamp(28px, 4vw, 40px);
-  border-top: 1px solid var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
-  line-height: 1.4;
-}
-
-.definition p + p {
-  margin-top: 14px;
-  color: var(--muted);
-}
-
-.env-head {
-  font-weight: 500;
-}
 
 .activities {
   display: grid;
@@ -893,43 +911,34 @@ code {
   color: var(--muted);
 }
 
-.person-bio {
-  max-width: 34ch;
-  margin-top: 12px;
-  font-size: 0.95rem;
-}
-
 .person-links {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-top: 18px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .plink {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--ink);
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  padding: 4px;
+  color: var(--muted);
+  transition: color 0.15s ease;
 }
 
 .plink:hover {
-  border-color: var(--accent);
   color: var(--accent);
 }
 
+.plink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .plink svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   flex: none;
 }
 
