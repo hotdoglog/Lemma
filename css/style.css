@@ -651,8 +651,8 @@ code {
   border-top: 1px solid var(--rule);
 }
 
-.ev.is-highlight {
-  background: linear-gradient(90deg, var(--mark), transparent 70%);
+.ev.is-highlight .ev-date {
+  border-color: var(--accent);
 }
 
 .ev.is-past {
