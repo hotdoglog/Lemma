@@ -4,7 +4,7 @@
 window.LEMMA = {
   club: {
     name: "LeMMA",
-    meeting: "Fridays",
+    meeting: "Fridays 5:30-6:30 pm",
     location: "Warren Weaver Hall",
     // Leave a value empty ("") to hide its link.
     instagram: "https://www.instagram.com/lemma.courant.nyu/",
