@@ -67,6 +67,30 @@ To set an event's type (which sets its colour on the site), put one of these tag
 
 Repeating events, all-day events and cancelled events are all handled. The site shows events from a year back to a year ahead.
 
+### Syncing from the members' calendar
+
+`tools/calendar-sync.gs` is a Google Apps Script that copies events from the club's private members' calendar to the public calendar every 15 minutes, and tags each copy `#meeting`, `#talk` or `#social` based on words in its title. It runs under your Google account, so you need to be able to see event details on the members' calendar and make changes on the public one. It's free and doesn't need the Google Cloud project.
+
+**How it behaves**
+
+- Everything on the members' calendar from the past 12 months to 6 months ahead is copied (change `MONTHS_BACK` and `MONTHS_AHEAD` to adjust), except events marked **Private** in Google Calendar and titles listed in `SKIP_TITLES`.
+- **To keep an event off the website, delete its copy on the public calendar.** The script remembers and won't copy it again, even if the original is edited. For a repeating event, each date is a separate copy, so delete each one you want hidden.
+- Edits you make to a copy on the public calendar (e.g. fixing its type) stay until someone edits the original, which refreshes the copy.
+- When an original is deleted, its copy is removed too.
+- Events you add straight to the public calendar are never touched.
+
+**Setup**
+
+1. Go to [script.google.com](https://script.google.com), signed in with the account that has access to both calendars, and click **New project**. Name it (e.g. "LeMMA calendar sync").
+2. Replace everything in `Code.gs` with the contents of `tools/calendar-sync.gs`.
+3. Fill in `SOURCE_CALENDAR_ID` (the members' calendar) and `PUBLIC_CALENDAR_ID` at the top. Each calendar's ID is under **Settings and sharing → Integrate calendar** in Google Calendar. Don't commit the filled-in IDs back to this repository, since it's public.
+4. In the left sidebar, click **+** next to **Services**, choose **Google Calendar API** and click **Add**.
+5. Pick `setup` from the function menu in the toolbar and click **Run**. Approve the permissions it asks for (Google will warn that the app isn't verified; click **Advanced → Go to … (unsafe)**, since it's your own script).
+
+That's it: it syncs once right away, then every 15 minutes. To change the type keywords or skip list, edit the settings at the top of the script and save.
+
+**Bringing back hidden events:** run `listHidden` to see what's hidden (it prints to the execution log). Run `restoreHidden` to bring them all back, or set `RESTORE_TITLE` to part of a title first to bring back only matching events.
+
 ## Previewing locally
 
 Open `index.html` in a browser, or run a small local server from this folder:

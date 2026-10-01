@@ -34,6 +34,14 @@ window.LEMMA = {
       links: { website: "", cv: "", linkedin: "https://www.linkedin.com/in/leylasozen-kohl/" },
     },
     {
+      name: "Juan Camilo Gonzalez",
+      role: "Vice President",
+      details: "MS in Mathematics",
+      photo: "assets/leaders/juan.jpeg",
+      glyph: "ε",
+      links: { website: "https://juancagc.github.io/", cv: "", linkedin: "" },
+    },
+    {
       name: "Ashley Sobolewski",
       role: "Treasurer",
       details: "Master of Science",
