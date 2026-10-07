@@ -836,6 +836,38 @@ code {
   }
 }
 
+/* ---------- Gallery ---------- */
+
+.gallery {
+  columns: 3 260px;
+  column-gap: clamp(16px, 3vw, 28px);
+  margin: 0;
+  padding: 0 0 clamp(56px, 8vw, 96px);
+  list-style: none;
+}
+
+.gallery-item {
+  break-inside: avoid;
+  margin-bottom: clamp(16px, 3vw, 28px);
+}
+
+.gallery-item figure {
+  margin: 0;
+}
+
+.gallery-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.gallery-empty {
+  color: var(--muted);
+}
+
 /* ---------- Leadership ---------- */
 
 .board {

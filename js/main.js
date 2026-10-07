@@ -253,6 +253,28 @@
       </li>`;
   }
 
+  // ---------- Gallery ----------
+
+  const gallery = $("#gallery");
+  if (gallery) {
+    const photos = (window.LEMMA_GALLERY || [])
+      .map((p) => (typeof p === "string" ? { photo: p } : p))
+      .filter((p) => p && p.photo);
+    gallery.innerHTML = photos.length
+      ? photos.map(galleryItem).join("")
+      : `<li class="gallery-empty">No photos yet. Check back soon.</li>`;
+  }
+
+  function galleryItem(p) {
+    return `
+      <li class="gallery-item">
+        <figure>
+          <img src="${esc(p.photo)}" alt="${esc(p.caption || "LeMMA photo")}" loading="lazy">
+          ${p.caption ? `<figcaption class="photo-caption">${esc(p.caption)}</figcaption>` : ""}
+        </figure>
+      </li>`;
+  }
+
   // ---------- Photos: show a placeholder until a real image exists ----------
 
   $$("[data-photo]").forEach((frame) => {
